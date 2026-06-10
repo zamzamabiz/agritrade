@@ -589,7 +589,7 @@ const TradeDataPage = () => {
                       <span className="td-rpp-label">ROWS:</span>
                       <select className="td-rpp-select" value={limit}
                         onChange={e => { setLimit(Number(e.target.value)); setPage(1); }} disabled={loading}>
-                        {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                        {[10, 20, 50, 100, 500].map(n => <option key={n} value={n}>{n}</option>)}
                       </select>
                     </div>
                     <span className="td-rec-info">

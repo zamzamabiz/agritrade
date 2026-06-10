@@ -1,0 +1,212 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes borderPulse {
+  0%,
+  100% {
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.7);
+  }
+}
+@keyframes gridFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hs-module-card {
+  background: rgba(15, 20, 30, 0.7);
+  border: 1px solid var(--theme-accent-border, rgba(245, 158, 11, 0.15));
+  border-radius: 4px;
+  padding: 1.75rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.22s ease;
+  backdrop-filter: blur(8px);
+}
+.hs-module-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.04) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.22s;
+}
+.hs-module-card:hover {
+  border-color: var(--theme-accent-border, rgba(245, 158, 11, 0.55));
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(245, 158, 11, 0.2),
+    inset 0 1px 0 rgba(245, 158, 11, 0.1);
+}
+.hs-module-card:hover::before {
+  opacity: 1;
+}
+
+.hs-module-card .corner-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 20px 20px 0 0;
+  border-color: rgba(245, 158, 11, 0.4) transparent transparent transparent;
+  transition: border-color 0.22s;
+}
+.hs-module-card:hover .corner-mark {
+  border-color: rgba(245, 158, 11, 0.9) transparent transparent transparent;
+}
+
+.hs-section-chip {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: rgba(245, 158, 11, 0.8);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1.02rem;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.hs-chapter-badge {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 3.5rem;
+  line-height: 1;
+  color: rgba(245, 158, 11, 0.12);
+  position: absolute;
+  bottom: 1rem;
+  right: 1.25rem;
+  user-select: none;
+  pointer-events: none;
+  letter-spacing: 1px;
+}
+
+.ticker-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+}
+.ticker-inner {
+  display: inline-flex;
+  animation: ticker 30s linear infinite;
+}
+
+.grid-dot-bg {
+  background-image: radial-gradient(
+    circle,
+    rgba(245, 158, 11, 0.12) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+}
+
+/* Light theme readability for inline-styled MainPage */
+[data-theme='light'] .mp-page-root {
+  background: linear-gradient(160deg, #ffffff 0%, #f8fafc 55%, #eef2f7 100%) !important;
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .mp-page-root h1,
+[data-theme='light'] .mp-page-root h2,
+[data-theme='light'] .mp-page-root h3,
+[data-theme='light'] .mp-page-root p,
+[data-theme='light'] .mp-page-root span,
+[data-theme='light'] .mp-page-root div {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .mp-page-root .hs-section-chip,
+[data-theme='light'] .mp-page-root .hs-chapter-badge,
+[data-theme='light'] .mp-page-root .corner-mark,
+[data-theme='light'] .mp-page-root strong {
+  color: #b45309 !important;
+}
+
+[data-theme='light'] .mp-page-root .hs-module-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+[data-theme='light'] .mp-page-root .ticker-wrap {
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+@media (max-width: 1024px) {
+  .hs-module-card {
+    padding: 1.15rem;
+  }
+
+  .hs-section-chip {
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hs-module-card {
+    padding: 0.95rem;
+  }
+
+  .ticker-wrap {
+    border-top-width: 0;
+  }
+
+  .hs-module-card .corner-mark {
+    border-width: 14px 14px 0 0;
+  }
+}

@@ -1,0 +1,217 @@
+.rp-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--theme-bg);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.rp-main {
+  flex: 1;
+  padding: 2rem 1rem;
+  margin: 0;
+  transition: margin-left 0.3s ease;
+  min-width: 0;
+}
+
+.rp-main.sidebar-open {
+  margin: 10px;
+}
+
+.rp-card {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 1px solid var(--theme-surface-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.rp-title {
+  margin-bottom: 1.5rem;
+  color: var(--theme-heading);
+}
+
+.rp-subtitle {
+  color: var(--theme-muted);
+  margin-bottom: 2.5rem;
+}
+
+[data-theme="light"] .rp-root {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .rp-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .rp-root {
+  background: #080c14;
+}
+
+[data-theme="dark"] .rp-card {
+  background: rgba(12, 16, 26, 0.78);
+  border-color: rgba(245, 158, 11, 0.14);
+}
+
+/* Dark-mode readability for market report components that use inline light colors */
+[data-theme="dark"] .rp-root .mi-root,
+[data-theme="dark"] .rp-root .st-root,
+[data-theme="dark"] .rp-root .ie-root,
+[data-theme="dark"] .rp-root .ii-root {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root [style*="#0f172a"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(15, 23, 42)"],
+[data-theme="dark"] .rp-root .st-root [style*="#0f172a"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(15, 23, 42)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#0f172a"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(15, 23, 42)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#0f172a"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(15, 23, 42)"],
+[data-theme="dark"] .rp-root .mi-root h2,
+[data-theme="dark"] .rp-root .mi-root h3,
+[data-theme="dark"] .rp-root .st-root h2,
+[data-theme="dark"] .rp-root .st-root h3,
+[data-theme="dark"] .rp-root .ie-root h2,
+[data-theme="dark"] .rp-root .ie-root h3,
+[data-theme="dark"] .rp-root .ii-root h2,
+[data-theme="dark"] .rp-root .ii-root h3 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root [style*="#64748b"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(100, 116, 139)"],
+[data-theme="dark"] .rp-root .st-root [style*="#64748b"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(100, 116, 139)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#64748b"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(100, 116, 139)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#64748b"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(100, 116, 139)"],
+[data-theme="dark"] .rp-root .mi-root p,
+[data-theme="dark"] .rp-root .st-root p,
+[data-theme="dark"] .rp-root .ie-root p,
+[data-theme="dark"] .rp-root .ii-root p,
+[data-theme="dark"] .rp-root .ie-root label,
+[data-theme="dark"] .rp-root .ii-root label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root [style*="#fff"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(255, 255, 255)"],
+[data-theme="dark"] .rp-root .st-root [style*="#fff"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(255, 255, 255)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#fff"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(255, 255, 255)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#fff"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(255, 255, 255)"] {
+  background-color: rgba(15, 23, 42, 0.82) !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root [style*="#f8fafc"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(248, 250, 252)"],
+[data-theme="dark"] .rp-root .mi-root [style*="#f9fafb"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(249, 250, 251)"],
+[data-theme="dark"] .rp-root .st-root [style*="#f8fafc"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(248, 250, 252)"],
+[data-theme="dark"] .rp-root .st-root [style*="#f9fafb"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(249, 250, 251)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#f8fafc"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(248, 250, 252)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#f9fafb"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(249, 250, 251)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#f8fafc"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(248, 250, 252)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#f9fafb"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(249, 250, 251)"] {
+  background-color: rgba(30, 41, 59, 0.68) !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root table,
+[data-theme="dark"] .rp-root .st-root table,
+[data-theme="dark"] .rp-root .ie-root table,
+[data-theme="dark"] .rp-root .ii-root table {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root table th,
+[data-theme="dark"] .rp-root .st-root table th,
+[data-theme="dark"] .rp-root .ie-root table th,
+[data-theme="dark"] .rp-root .ii-root table th {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root table td,
+[data-theme="dark"] .rp-root .st-root table td,
+[data-theme="dark"] .rp-root .ie-root table td,
+[data-theme="dark"] .rp-root .ii-root table td,
+[data-theme="dark"] .rp-root .mi-root span,
+[data-theme="dark"] .rp-root .st-root span,
+[data-theme="dark"] .rp-root .ie-root span,
+[data-theme="dark"] .rp-root .ii-root span {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .rp-root .mi-root [style*="#e2e8f0"],
+[data-theme="dark"] .rp-root .st-root [style*="#e2e8f0"],
+[data-theme="dark"] .rp-root .ie-root [style*="#e2e8f0"],
+[data-theme="dark"] .rp-root .ii-root [style*="#e2e8f0"],
+[data-theme="dark"] .rp-root .mi-root [style*="#cbd5e1"],
+[data-theme="dark"] .rp-root .st-root [style*="#cbd5e1"],
+[data-theme="dark"] .rp-root .ie-root [style*="#cbd5e1"],
+[data-theme="dark"] .rp-root .ii-root [style*="#cbd5e1"],
+[data-theme="dark"] .rp-root .mi-root [style*="#f1f5f9"],
+[data-theme="dark"] .rp-root .mi-root [style*="rgb(241, 245, 249)"],
+[data-theme="dark"] .rp-root .st-root [style*="#f1f5f9"],
+[data-theme="dark"] .rp-root .st-root [style*="rgb(241, 245, 249)"],
+[data-theme="dark"] .rp-root .ie-root [style*="#f1f5f9"],
+[data-theme="dark"] .rp-root .ie-root [style*="rgb(241, 245, 249)"],
+[data-theme="dark"] .rp-root .ii-root [style*="#f1f5f9"],
+[data-theme="dark"] .rp-root .ii-root [style*="rgb(241, 245, 249)"] {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+
+[data-theme="dark"] .rp-root .ie-root input,
+[data-theme="dark"] .rp-root .ii-root input {
+  background: rgba(15, 23, 42, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rp-root .ie-root input::placeholder,
+[data-theme="dark"] .rp-root .ii-root input::placeholder {
+  color: #94a3b8 !important;
+}
+
+@media (max-width: 1024px) {
+  .rp-main {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .rp-main.sidebar-open {
+    margin: 0.4rem;
+  }
+
+  .rp-card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .rp-subtitle {
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .rp-main,
+  .rp-main.sidebar-open {
+    margin: 0;
+    padding: 0.9rem 0.6rem;
+  }
+
+  .rp-card {
+    padding: 0.85rem;
+  }
+}

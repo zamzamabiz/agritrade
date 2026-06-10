@@ -1,0 +1,13 @@
+STEP 1 — Open Windows Search
+
+Press:
+
+Windows Key
+
+then search:
+
+pgAdmin
+
+OR:
+
+pgAdmin 4

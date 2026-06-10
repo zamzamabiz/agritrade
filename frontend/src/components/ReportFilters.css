@@ -1,0 +1,259 @@
+.rf-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rf-btn {
+  padding: 8px 18px;
+  margin-top: 4px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.rf-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  display: inline-block;
+  animation: rfSpin 0.8s linear infinite;
+}
+
+@keyframes rfSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rf-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.rf-btn-primary {
+  background: var(--theme-accent-soft);
+  color: var(--theme-heading);
+  border-color: var(--theme-accent-border);
+}
+
+.rf-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--theme-accent-soft) 70%, var(--theme-accent) 30%);
+}
+
+.rf-btn-muted {
+  background: rgba(100, 116, 139, 0.18);
+  color: var(--theme-heading);
+  border-color: rgba(100, 116, 139, 0.35);
+}
+
+.rf-btn-muted:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.28);
+}
+
+.rf-export-wrap {
+  position: relative;
+  margin-top: 4px;
+}
+
+.rf-export-menu {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 0;
+  min-width: 150px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-surface-border);
+  border-radius: 6px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.rf-export-item {
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-bottom: 1px solid var(--theme-surface-border);
+  background: var(--theme-surface);
+  color: var(--theme-heading);
+  text-align: left;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rf-export-item:last-child {
+  border-bottom: none;
+}
+
+.rf-export-item:hover {
+  background: var(--theme-accent-soft);
+}
+
+.rf-fd {
+  position: relative;
+  min-width: 170px;
+}
+
+.rf-fd-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-surface-border);
+  border-radius: 6px;
+  color: var(--theme-text);
+  background: var(--theme-input-bg, var(--theme-surface));
+  cursor: pointer;
+}
+
+.rf-fd-trigger.open {
+  border-color: var(--theme-accent-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent-soft) 60%, transparent);
+}
+
+.rf-fd-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--theme-muted);
+}
+
+.rf-fd-value.set {
+  color: var(--theme-text);
+}
+
+.rf-fd-caret {
+  color: var(--theme-muted);
+  font-size: 0.85rem;
+}
+
+.rf-fd-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  border: 1px solid var(--theme-surface-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+  z-index: 30;
+}
+
+.rf-fd-search-wrap {
+  padding: 8px;
+  border-bottom: 1px solid var(--theme-surface-border);
+}
+
+.rf-fd-search {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-surface-border);
+  color: var(--theme-text);
+  background: var(--theme-input-bg, var(--theme-surface));
+}
+
+.rf-fd-search:focus {
+  outline: none;
+  border-color: var(--theme-accent-border);
+}
+
+.rf-fd-options {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.rf-fd-option,
+.rf-fd-empty {
+  padding: 9px 10px;
+  font-weight: 500;
+  color: var(--theme-text);
+}
+
+.rf-fd-option {
+  cursor: pointer;
+}
+
+.rf-fd-option:hover,
+.rf-fd-option.selected {
+  background: var(--theme-accent-soft);
+  color: var(--theme-heading);
+}
+
+.rf-fd-empty {
+  color: var(--theme-muted);
+}
+
+.rf-wrap {
+  width: 100%;
+}
+
+.rf-field {
+  min-width: 0;
+}
+
+.rf-month-year {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.rf-input-select {
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .rf-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .rf-export-wrap {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .rf-wrap {
+    gap: 0.8rem !important;
+  }
+
+  .rf-field {
+    flex: 1 1 100%;
+  }
+
+  .rf-month-year {
+    width: 100%;
+  }
+
+  .rf-month-year .rf-input-select {
+    min-width: 0 !important;
+  }
+
+  .rf-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rf-btn,
+  .rf-export-wrap,
+  .rf-export-wrap .rf-btn {
+    width: 100%;
+  }
+
+  .rf-export-menu {
+    left: 0;
+    right: 0;
+    min-width: 0;
+  }
+}

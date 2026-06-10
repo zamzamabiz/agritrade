@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.env
+.env.*
+uploads/
+*.log
+npm-debug.log*
+.DS_Store
+*.sqlite
+*.db
+coverage/
+dist/
+build/
+.cache/
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Test
+*.test.js
+*.spec.js
+
+# Misc
+*.bak
+*.swp
+*.swo

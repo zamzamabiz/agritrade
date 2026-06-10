@@ -1,0 +1,11 @@
+username: javed
+pass: 123456789
+
+1. open Docker container application in the computer and then run 2 containers: 'data' and 'redis-server'
+2. open project in vscode and run: frontend and backend
+3. go into the backend folder inside VSCode terminal using below command: cd backend
+4. then run this command: node excelWorker.js
+5. then proceed to login using the above username and password.
+
+
+rightnow, as the database is fresh we need to firstly upload the data using the UI.

@@ -1,0 +1,21 @@
+{
+  "trade_type": ["Trade Type", "trade type", "TradeType"],
+  "date": ["Date", "date", "Transaction Date", "GD Date"],
+  "hs_code": ["HS Code", "hs code", "H.S. Code", "HSCODE"],
+  "origin": ["origin", "Origin", "Country of Origin"],
+  "exporter_overseas": ["EXPORTER OVERSEAS", "Supplier Name", "supplier_name", "Exporter Overseas"],
+  "item": ["Item", "item", "Item Name"],
+  "item_description": ["Item Description", "item description", "Description"],
+  "ntn": ["NTN", "ntn", "NTN Number"],
+  "importer_pak": ["Importer PAK", "Importer", "Importer Name on GD", "Importer Name", "Importer"],
+  "port_of_shipment": ["Port of Shipment", "port of shipment", "Port", "Port Name"],
+  "quantity": ["Quantity", "quantity", "Qty"],
+  "uom": ["UOM", "uom", "Unit", "Unit of Measure"],
+  "agent_name": ["Agent Name", "agent_name", "Agent"],
+  "agent_number": ["Agent No", "agent_number", "Agent Number"],
+  "terminal_sheds": ["Terminal/Sheds", "Terminal", "Sheds", "terminal_sheds"],
+  "value_usd": ["A.Value", "a.value", "a_value", "Value USD"],
+  "value_pkr": ["Import Value in PKR", "import_value_in_pkr", "Value PKR"],
+  "currency": ["Currency", "currency"],
+  "importer_address": ["Address", "Importer Address on GD", "importer_address"]
+}

@@ -1,0 +1,104 @@
+.rs-toggle-btn {
+  position: fixed;
+  top: auto;
+  bottom: 1rem;
+  left: 236px;
+  margin-bottom: 1.5rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--theme-accent-border);
+  background: var(--theme-accent-soft);
+  color: var(--theme-heading);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95 rem;
+  font-weight: 600;
+  z-index: 1100;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+  transition: left 0.25s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.rs-toggle-btn:hover {
+  transform: translateX(1px);
+}
+
+.rs-toggle-btn.closed {
+  left: 0;
+  top: auto;
+  bottom: 1rem;
+  transform: none;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0.75rem 0.9rem;
+}
+
+.rs-toggle-btn.closed:hover {
+  transform: translateX(2px);
+}
+
+.rs-toggle-btn.open {
+  left: 216px;
+  top: auto;
+  bottom: 1rem;
+}
+
+.rs-panel {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  border-right: 1px solid var(--theme-surface-border);
+  backdrop-filter: blur(8px);
+}
+
+.rs-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--theme-heading);
+}
+
+.rs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rs-report-btn {
+  padding: 0.6rem 0.85rem;
+  background: transparent;
+  color: var(--theme-text);
+  border: 1px solid var(--theme-surface-border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  transition: all 0.18s ease;
+}
+
+.rs-report-btn:hover:not(:disabled) {
+  background: var(--theme-accent-soft);
+  border-color: var(--theme-accent-border);
+}
+
+.rs-report-btn.active {
+  background: var(--theme-accent-soft);
+  border-color: var(--theme-accent-border);
+  color: var(--theme-accent);
+}
+
+.rs-report-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .rs-toggle-btn {
+    left: 0;
+    bottom: 0.75rem;
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .rs-toggle-btn.open {
+    left: 0;
+  }
+}

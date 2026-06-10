@@ -1,0 +1,12 @@
+Tahir Khan 6-5-2026
+1. open DOCKER and click the RUN icon to start the container.
+2. open the AGRITRADE folder inside VS-CODE
+3. open 1 terminal and
+4. rum "npm run start" in both terminals
+5. ENJOY
+
+backend is running on PORT: 5000
+frontend is running on PORT: 3000
+database is running on PORT: 5432
+
+application url: http://localhost:3000

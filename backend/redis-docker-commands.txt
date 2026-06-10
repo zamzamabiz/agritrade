@@ -1,0 +1,16 @@
+# Commands to run Redis in Docker
+
+# 1. Pull the official Redis image
+sudo docker pull redis:latest
+
+# 2. Run Redis container (default port 6379)
+sudo docker run -d --name redis-server -p 6379:6379 redis:latest
+
+# 3. (Optional) Check running containers
+sudo docker ps
+
+# 4. (Optional) Stop Redis container
+sudo docker stop redis-server
+
+# 5. (Optional) Remove Redis container
+sudo docker rm redis-server

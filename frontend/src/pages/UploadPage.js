@@ -25,6 +25,7 @@ const UploadPage = () => {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     const savedJobId = localStorage.getItem('activeUploadJobId');
@@ -91,6 +92,30 @@ const UploadPage = () => {
       if (res?.jobId) { setJobId(res.jobId); localStorage.setItem('activeUploadJobId', res.jobId); }
       else { setUploadResult(res); setFile(null); setUploading(false); }
     } catch (err) { setError(err.message || 'Upload failed. Please try again.'); setUploading(false); }
+  };
+
+  const handleDeleteUpload = async (uploadId, rowCount, recordsCount) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this upload?\n\n` +
+      `This will permanently remove ${(recordsCount || 0).toLocaleString()} records from the system.`
+    );
+    
+    if (!confirmDelete) return;
+
+    setDeletingId(uploadId);
+    try {
+      const response = await apiService.deleteUpload(uploadId);
+      if (response.success) {
+        setError(null);
+        await fetchHistory();
+      } else {
+        setError(response.message || 'Failed to delete upload');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to delete upload. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const percent = jobStatus?.progress?.percent ?? jobStatus?.progress;
@@ -367,7 +392,7 @@ const UploadPage = () => {
 
         <div className="up-hist-table-wrap">
           <div className="up-hist-head">
-            {['DATE', 'JOB ID', 'TYPE', 'CHAPTER', 'RECORDS', 'STATUS'].map(h => (
+            {['DATE', 'JOB ID', 'TYPE', 'CHAPTER', 'RECORDS', 'STATUS', 'ACTION'].map(h => (
               <div key={h} className="up-hist-th">{h}</div>
             ))}
           </div>
@@ -395,6 +420,20 @@ const UploadPage = () => {
                     {item.status?.charAt(0).toUpperCase() + item.status?.slice(1).toLowerCase()}
                   </span>
                 </div>
+              </div>
+              <div className="up-hist-td up-hist-action">
+                <button 
+                  className="up-hist-delete-btn"
+                  onClick={() => handleDeleteUpload(item.id, item.row_count, item.row_count)}
+                  disabled={deletingId === item.id}
+                  title="Delete this upload and all associated records"
+                >
+                  {deletingId === item.id ? (
+                    <div className="up-hist-delete-spinner" />
+                  ) : (
+                    <MdDelete size={16} />
+                  )}
+                </button>
               </div>
             </div>
           )) : (

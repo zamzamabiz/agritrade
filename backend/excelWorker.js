@@ -13,6 +13,7 @@ const worker = new Worker(
   "excel-upload",
   async (job) => {
     const {
+      uploadId,
       fileBuffer,
       originalFilename,
       companyId,
@@ -22,7 +23,11 @@ const worker = new Worker(
       checksum,
       userId,
     } = job.data;
-    const uploadId = job.data.uploadId || uuidv4();
+    
+    if (!uploadId) {
+      throw new Error("Missing uploadId in job data");
+    }
+    
     try {
       // Milestone: file received
       await job.updateProgress({ percent: 20, stage: "received", inserted: 0, total: 0, rawCount: 0, validCount: 0 });
@@ -62,24 +67,44 @@ const worker = new Worker(
       });
       // Begin transaction
       await sql.begin(async (tx) => {
-        // Ensure partitions
-        const partitionMonths = new Set();
-        for (const r of validRows) {
-          const d = r._period_date || periodDate;
-          const monthStart = new Date(
-            Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1),
-          );
-          partitionMonths.add(monthStart.toISOString().slice(0, 10));
+        // Check if this uploadId already exists (for retry scenarios)
+        const existingUpload = await tx`
+          SELECT id FROM uploaded_file WHERE upload_id = ${uploadId} LIMIT 1
+        `;
+        
+        let fileRowId;
+        if (existingUpload.length > 0) {
+          // Reuse existing record - just skip the insert
+          fileRowId = existingUpload[0].id;
+          console.log(`✅ [UPLOAD ${uploadId}] Reusing existing upload record ID: ${fileRowId} (retry detected)`);
+          
+          // Delete any partial records from failed attempts
+          const deletedCount = await tx`DELETE FROM trade_fact WHERE uploaded_file_id = ${fileRowId}`;
+          console.log(`🗑️  [UPLOAD ${uploadId}] Cleaned up ${deletedCount.count || 0} partial records from previous attempt`);
+        } else {
+          console.log(`📝 [UPLOAD ${uploadId}] Creating new upload record`);
+          // Ensure partitions
+          const partitionMonths = new Set();
+          for (const r of validRows) {
+            const d = r._period_date || periodDate;
+            const monthStart = new Date(
+              Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1),
+            );
+            partitionMonths.add(monthStart.toISOString().slice(0, 10));
+          }
+          for (const month of partitionMonths) {
+            await ensurePartition(tx, month);
+          }
+          
+          // Insert uploaded_file stub (processing)
+          const [fileRow] = await tx`
+          INSERT INTO uploaded_file (upload_id, company_id, trade_type, chapter_id, period_date, original_filename, row_count, checksum, status)
+          VALUES (${uploadId}, ${companyId}, ${tradeType}, ${chapterId}, ${periodDate}, ${originalFilename}, ${validRows.length}, ${checksum}, 'processing')
+          RETURNING id
+        `;
+          fileRowId = fileRow.id;
+          console.log(`✔️  [UPLOAD ${uploadId}] Record created with ID: ${fileRowId}`);
         }
-        for (const month of partitionMonths) {
-          await ensurePartition(tx, month);
-        }
-        // Insert uploaded_file stub (processing)
-        const [fileRow] = await tx`
-        INSERT INTO uploaded_file (upload_id, company_id, trade_type, chapter_id, period_date, original_filename, row_count, checksum, status)
-        VALUES (${uploadId}, ${companyId}, ${tradeType}, ${chapterId}, ${periodDate}, ${originalFilename}, ${validRows.length}, ${checksum}, 'processing')
-        RETURNING id
-      `;
         // Prepare fact rows
         const factRows = [];
         for (const row of validRows) {
@@ -104,7 +129,7 @@ const worker = new Worker(
             period_date: row._period_date || periodDate,
             quantity: row.quantity || null,
             value_usd: row.value_usd || null,
-            uploaded_file_id: fileRow.id,
+            uploaded_file_id: fileRowId,
             created_at: new Date(),
           });
         }
@@ -137,17 +162,27 @@ const worker = new Worker(
         await tx`
         UPDATE uploaded_file
         SET status = 'success'
-        WHERE id = ${fileRow.id}
+        WHERE id = ${fileRowId}
       `;
       });
-      await job.updateProgress({ status: "completed", percent: 100, stage: "completed", inserted: undefined, rawCount: validation.totalRecords || parsedRows.length, validCount: validation.validCount || factRows.length });
+      await job.updateProgress({ status: "completed", percent: 100, stage: "completed", inserted: factRows.length, total: factRows.length, rawCount: validation.totalRecords || parsedRows.length, validCount: validation.validCount || factRows.length });
       // No file cleanup needed (buffer only)
     } catch (error) {
       await job.updateProgress({ status: "failed", error: error.message });
       throw error;
     }
   },
-  { connection: { host: "127.0.0.1", port: 6379 } },
+  {
+    connection: { host: "127.0.0.1", port: 6379 },
+    lockDuration: 300000, // 5 minutes - allows time for large file processing
+    lockRenewTime: 60000, // Renew lock every 60 seconds
+    concurrency: 2, // Process up to 2 jobs in parallel
+    settings: {
+      maxStalledCount: 3, // Max times a job can be stalled before failing
+      stalledInterval: 5000, // Check for stalled jobs every 5 seconds
+      maxRetriesPerLocalLock: 5, // Retry acquiring lock up to 5 times
+    },
+  },
 );
 
 const queueEvents = new QueueEvents("excel-upload", {

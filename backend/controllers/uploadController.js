@@ -105,7 +105,7 @@ const UploadController = {
       const { Queue } = await import("bullmq");
       const checksum = computeChecksum(req.file.buffer);
 
-      // dedupe: same company + trade_type + chapter + period + checksum already processed
+      // dedupe: same company + trade_type + chapter + period + checksum already processed or processing
       const existing = await sql`
         SELECT id, status FROM uploaded_file
         WHERE company_id = ${companyId}
@@ -115,20 +115,37 @@ const UploadController = {
           AND checksum = ${checksum}
         LIMIT 1
       `;
-      if (existing.length && existing[0].status === "success") {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "Duplicate upload detected (checksum match)",
-          });
+      if (existing.length) {
+        const status = existing[0].status?.toLowerCase();
+        if (status === "success") {
+          return res
+            .status(409)
+            .json({
+              success: false,
+              message: "Duplicate upload detected - file already processed successfully",
+            });
+        }
+        if (status === "processing" || status === "pending" || status === "active") {
+          return res
+            .status(409)
+            .json({
+              success: false,
+              message: "This file is already being processed. Please wait for it to complete.",
+            });
+        }
       }
 
       // Enqueue BullMQ job
       const queue = new Queue("excel-upload", {
         connection: { host: "127.0.0.1", port: 6379 },
       });
+      
+      // Generate uploadId here to ensure it's consistent across retries
+      const { v4: uuidv4 } = await import("uuid");
+      const uploadId = uuidv4();
+      
       const job = await queue.add("processExcel", {
+        uploadId,
         fileBuffer: req.file.buffer,
         originalFilename: req.file.originalname,
         companyId,
@@ -265,12 +282,47 @@ const UploadController = {
   },
 
   deleteUpload: async (req, res) => {
-    return res
-      .status(405)
-      .json({
-        success: false,
-        message: "Deletion is disabled for audit integrity",
+    try {
+      const sql = req.sql;
+      const { id } = req.params;
+
+      // Verify the upload record exists
+      const uploadRecord = await sql`
+        SELECT id, row_count FROM uploaded_file WHERE id = ${id} LIMIT 1
+      `;
+
+      if (!uploadRecord.length) {
+        return res.status(404).json({
+          success: false,
+          message: "Upload record not found",
+        });
+      }
+
+      const recordCount = uploadRecord[0].row_count || 0;
+
+      // Delete all trade_fact records associated with this upload
+      await sql`
+        DELETE FROM trade_fact WHERE uploaded_file_id = ${id}
+      `;
+
+      // Delete the uploaded_file record
+      await sql`
+        DELETE FROM uploaded_file WHERE id = ${id}
+      `;
+
+      return res.json({
+        success: true,
+        message: `Upload deleted successfully. ${recordCount.toLocaleString()} records removed.`,
+        deletedRecordCount: recordCount,
       });
+    } catch (error) {
+      console.error("Error deleting upload:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete upload",
+        error: error.message,
+      });
+    }
   },
 
   getUploadStats: async (req, res) => {

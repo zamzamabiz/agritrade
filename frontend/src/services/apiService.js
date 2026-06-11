@@ -161,6 +161,15 @@ const apiService = {
     return handleResponse(response, retry);
   },
 
+  aiStats: async (params = {}) => {
+    const retry = () => apiService.aiStats(params);
+    const qs = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/ai/stats${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+    });
+    return handleResponse(response, retry);
+  },
+
   // ============ Upload APIs ============
   uploadFile: async (file, tradeType, chapter, period) => {
     const retry = () => apiService.uploadFile(file, tradeType, chapter, period);
@@ -605,6 +614,27 @@ const apiService = {
     );
   },
 
+  exportOverviewReport: async (params = {}, type = 'excel') => {
+    const queryParams = new URLSearchParams(params).toString();
+    const extension = type === 'pdf' ? 'pdf' : 'xlsx';
+    return apiService.aiDownloadFile(
+      `/export/overview/${type}${queryParams ? `?${queryParams}` : ''}`,
+      `overview_report.${extension}`,
+    );
+  },
+
+  shareOverviewReport: async (params = {}, type = 'excel') => {
+    const queryParams = new URLSearchParams(params).toString();
+    const extension = type === 'pdf' ? 'pdf' : 'xlsx';
+    const filename = `overview_report.${extension}`;
+    const blob = await apiService.getBlob(
+      `/export/overview/${type}${queryParams ? `?${queryParams}` : ''}`,
+      'GET',
+      null,
+    );
+    return apiService.shareReport(blob, filename, 'Executive Overview Report');
+  },
+
   // ============ Share Report Functions (Mobile) ============
   shareExportReport: async (filters = {}, type = "excel") => {
     const date = new Date().toISOString().split("T")[0];
@@ -855,6 +885,15 @@ const apiService = {
     const retry = () => apiService.aiItemExporterProducts(params);
     const qs = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/ai/item-exporter/products${qs ? `?${qs}` : ''}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+    });
+    return handleResponse(response, retry);
+  },
+
+  aiItemImporterProducts: async (params = {}) => {
+    const retry = () => apiService.aiItemImporterProducts(params);
+    const qs = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/ai/item-importer/products${qs ? `?${qs}` : ''}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
     });
     return handleResponse(response, retry);

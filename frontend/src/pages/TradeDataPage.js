@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MdSearch, MdClear,
   MdFilterList,
   MdArrowUpward,
   MdArrowDownward,
+  MdVisibility,
+  MdClose,
 } from 'react-icons/md';
 import apiService from '../services/apiService';
 import ExportModal from '../components/ExportModal';
@@ -62,6 +64,7 @@ const TradeDataPage = () => {
     'ntn',
   ]);
   const [tableColumns, setTableColumns] = useState([]);
+  const [visibleColumns, setVisibleColumns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
@@ -82,7 +85,13 @@ const TradeDataPage = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const displayColumns = useMemo(
+    () => tableColumns.filter((col) => visibleColumns.includes(col)),
+    [tableColumns, visibleColumns],
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -99,9 +108,10 @@ const TradeDataPage = () => {
 
   useEffect(() => {
     const handler = (e) => {
-      if (!e.target.closest('.td-fd') && !e.target.closest('.td-export-wrap')) {
+      if (!e.target.closest('.td-fd') && !e.target.closest('.td-export-wrap') && !e.target.closest('.td-columns-wrap')) {
         setDropdowns({ origin_country_id:false, item:false, importer:false, exporter:false });
         setExportMenuOpen(false);
+        setShowColumnsMenu(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -143,9 +153,15 @@ const TradeDataPage = () => {
       }
       // Only include columns present in both COLUMN_ORDER and cols, in the fixed order
       if (Array.isArray(cols)) {
-        setTableColumns(COLUMN_ORDER.filter(col => cols.includes(col)));
+        const nextColumns = COLUMN_ORDER.filter(col => cols.includes(col));
+        setTableColumns(nextColumns);
+        setVisibleColumns((prev) => {
+          const nextVisible = prev.length ? prev.filter((col) => nextColumns.includes(col)) : nextColumns;
+          return nextVisible.length ? nextVisible : nextColumns;
+        });
       } else {
         setTableColumns([]);
+        setVisibleColumns([]);
       }
       const fd = res?.data?.filters || {};
       if (fd.origins || fd.items || fd.importers || fd.exporters) {
@@ -184,6 +200,16 @@ const TradeDataPage = () => {
     setSortBy(col);
     setSortDir(direction);
     setPage(1);
+  };
+
+  const toggleColumn = (col) => {
+    setVisibleColumns((prev) => {
+      if (prev.includes(col)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((item) => item !== col);
+      }
+      return [...prev, col];
+    });
   };
 
   const FilterDropdown = ({ name, label, options }) => {
@@ -479,6 +505,26 @@ const TradeDataPage = () => {
                   exportError={exportError} />
               )}
             </div>
+
+            <div className="td-columns-wrap">
+              <button type="button" className="td-columns-btn" onClick={() => setShowColumnsMenu((value) => !value)}>
+                <MdVisibility size={14} /> COLUMNS
+              </button>
+              {showColumnsMenu && (
+                <div className="td-columns-menu">
+                  {tableColumns.map((col) => (
+                    <label key={col} className="td-columns-item">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns.includes(col)}
+                        onChange={() => toggleColumn(col)}
+                      />
+                      <span>{getColumnLabel(col)}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -571,7 +617,7 @@ const TradeDataPage = () => {
                   <table className="td-table">
                     <thead>
                       <tr>
-                        {tableColumns.map(col => (
+                        {displayColumns.map(col => (
                           <th key={col} className={SORTABLE_COLUMNS.has(col) ? 'sortable' : ''} scope="col">
                             <div className="td-th-inner">
                               <span className="td-th-label">{getColumnLabel(col)}</span>
@@ -602,8 +648,8 @@ const TradeDataPage = () => {
                     </thead>
                     <tbody>
                       {records.map((r, i) => (
-                        <tr key={r.id || i} style={{ animationDelay: `${i * 20}ms` }}>
-                          {tableColumns.map(col => (
+                        <tr key={r.id || i} style={{ animationDelay: `${i * 20}ms` }} className="td-row-clickable" onClick={() => setSelectedRecord(r)}>
+                          {displayColumns.map(col => (
                             <td key={col} className={WRAP_COLUMNS.has(col) ? 'td-cell-wrap' : ''}>
                               {(() => {
                                 if (col === 'trade_type') {
@@ -662,6 +708,40 @@ const TradeDataPage = () => {
               </div>
             )}
           </div>
+
+          {selectedRecord && (
+            <div className="td-drawer-overlay" onClick={() => setSelectedRecord(null)}>
+              <aside className="td-detail-drawer" onClick={(e) => e.stopPropagation()}>
+                <div className="td-drawer-head">
+                  <div>
+                    <div className="td-drawer-kicker">ROW DETAILS</div>
+                    <h3>{selectedRecord.item_name || selectedRecord.exporter_name || 'Trade Record'}</h3>
+                  </div>
+                  <button type="button" className="td-drawer-close" onClick={() => setSelectedRecord(null)}>
+                    <MdClose size={18} />
+                  </button>
+                </div>
+                <div className="td-drawer-grid">
+                  {displayColumns.map((col) => (
+                    <div key={col} className="td-drawer-field">
+                      <span>{getColumnLabel(col)}</span>
+                      <strong>
+                        {col === 'period_date' && selectedRecord[col]
+                          ? new Date(selectedRecord[col]).toLocaleDateString('en-GB').replace(/\//g, '.')
+                          : col === 'value_usd' && selectedRecord[col] != null
+                            ? `$${Number(selectedRecord[col]).toLocaleString()}`
+                            : col === 'quantity' && selectedRecord[col] != null
+                              ? Number(selectedRecord[col]).toLocaleString()
+                              : selectedRecord[col] != null && selectedRecord[col] !== ''
+                                ? selectedRecord[col]
+                                : '—'}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            </div>
+          )}
         </div>
       </main>
     </div>

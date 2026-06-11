@@ -20,6 +20,7 @@ const ItemImporterView = ({ filters, selectedReport, loading }) => {
   const dataInFlightKeyRef = useRef("");
   const productsCacheRef = useRef(new Map());
   const dataCacheRef = useRef(new Map());
+  const productListId = "item-importer-product-list";
 
   const normalizedFilters = useMemo(
     () => ({
@@ -72,7 +73,7 @@ const ItemImporterView = ({ filters, selectedReport, loading }) => {
       setViewLoading(true);
       setError(null);
       try {
-        const res = await apiService.aiItemExporterProducts(normalizedFilters);
+        const res = await apiService.aiItemImporterProducts(normalizedFilters);
         if (requestId !== productsRequestRef.current) return;
 
         const nextProducts = Array.isArray(res.products) ? res.products : [];
@@ -297,9 +298,10 @@ const ItemImporterView = ({ filters, selectedReport, loading }) => {
         </label>
         <input
           type="text"
+          list={productListId}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="e.g., GINGER, SPICES, etc."
+          placeholder="Type to search item names or pick from the list"
           style={{
             width: "100%",
             padding: "0.75rem",
@@ -309,6 +311,11 @@ const ItemImporterView = ({ filters, selectedReport, loading }) => {
             color: "#0f172a",
           }}
         />
+        <datalist id={productListId}>
+          {products.map((product) => (
+            <option key={product} value={product} />
+          ))}
+        </datalist>
         {searchQuery && (
           <p style={{ marginTop: "0.5rem", color: "#64748b", fontSize: "0.9em" }}>
             Searching for: <strong>{searchQuery}</strong>

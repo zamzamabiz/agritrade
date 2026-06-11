@@ -3,6 +3,38 @@
   gap: 0.5rem;
 }
 
+.rf-compare-toggle {
+  min-width: 170px;
+}
+
+.rf-compare-btn {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-surface-border);
+  background: var(--theme-input-bg, var(--theme-surface));
+  color: var(--theme-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rf-compare-btn.active {
+  color: var(--theme-heading);
+  background: var(--theme-accent-soft);
+  border-color: var(--theme-accent-border);
+}
+
+.rf-advanced-note {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.14);
+  color: var(--theme-muted);
+  font-size: 0.9rem;
+}
+
 .rf-btn {
   padding: 8px 18px;
   margin-top: 4px;
@@ -216,6 +248,10 @@
   .rf-actions {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .rf-compare-toggle {
+    flex: 1 1 100%;
   }
 
   .rf-export-wrap {

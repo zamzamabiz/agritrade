@@ -17,6 +17,8 @@ router.get('/dashboard/shipments', AiController.shipments);
 router.get('/dashboard/export-excel', AiController.exportExcel);
 
 // Advanced report exports
+router.get('/export/overview/excel', AiController.exportOverviewExcel);
+router.get('/export/overview/pdf', AiController.exportOverviewPDF);
 router.get('/export/market-intel/excel', AiController.exportMarketIntelExcel);
 router.get('/export/market-intel/pdf', AiController.exportMarketIntelPDF);
 router.get('/export/strategic/excel', AiController.exportStrategicExcel);
@@ -41,6 +43,7 @@ router.get('/strategic/hs-code-share', AiController.hsCodeShare);
 
 // Item > exporter/importer
 router.get('/item-exporter/products', AiController.itemExporterProducts);
+router.get('/item-importer/products', AiController.itemExporterProducts);
 router.get('/item-exporter', AiController.itemExporter);
 router.get('/item-importer', AiController.itemImporter);
 

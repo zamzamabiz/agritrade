@@ -172,6 +172,230 @@ const buildTopImportersRows = (rows, limit = 10) => {
         .map((it, idx) => ({ rank: idx + 1, importer: it.importer, quantity_kg: +it.quantity_kg.toFixed(2) }));
 };
 
+const buildOverviewPayload = (rows) => {
+    const totalQuantity = rows.reduce((sum, row) => sum + (Number(row.quantity_kg) || 0), 0);
+    const totalValue = rows.reduce((sum, row) => sum + (Number(row.total_value_usd) || 0), 0);
+    const shipments = rows.length;
+    const activeBuyers = new Set(rows.map((row) => row.importer_norm).filter(Boolean)).size;
+    const origins = new Set(rows.map((row) => row.exporter_country).filter(Boolean)).size;
+
+    const itemSums = {};
+    const importerSums = {};
+    const exporterSums = {};
+    rows.forEach((row) => {
+        const itemKey = row.item || 'UNKNOWN';
+        const importerKey = row.importer_norm || 'UNKNOWN';
+        const exporterKey = row.exporter_norm || 'UNKNOWN';
+        itemSums[itemKey] = (itemSums[itemKey] || 0) + (Number(row.quantity_kg) || 0);
+        importerSums[importerKey] = (importerSums[importerKey] || 0) + (Number(row.quantity_kg) || 0);
+        exporterSums[exporterKey] = (exporterSums[exporterKey] || 0) + (Number(row.quantity_kg) || 0);
+    });
+
+    const topItems = Object.keys(itemSums)
+        .map((item) => ({ item, quantity_kg: itemSums[item] }))
+        .sort((a, b) => b.quantity_kg - a.quantity_kg)
+        .slice(0, 10)
+        .map((row, idx) => ({ rank: idx + 1, ...row, share_pct: totalQuantity ? +(row.quantity_kg / totalQuantity * 100).toFixed(1) : 0 }));
+
+    const topImporters = Object.keys(importerSums)
+        .map((importer) => ({ importer, quantity_kg: importerSums[importer] }))
+        .sort((a, b) => b.quantity_kg - a.quantity_kg)
+        .slice(0, 10)
+        .map((row, idx) => ({ rank: idx + 1, ...row, share_pct: totalQuantity ? +(row.quantity_kg / totalQuantity * 100).toFixed(1) : 0 }));
+
+    const topExporters = Object.keys(exporterSums)
+        .map((exporter) => ({ exporter, quantity_kg: exporterSums[exporter] }))
+        .sort((a, b) => b.quantity_kg - a.quantity_kg)
+        .slice(0, 10)
+        .map((row, idx) => ({ rank: idx + 1, ...row, share_pct: totalQuantity ? +(row.quantity_kg / totalQuantity * 100).toFixed(1) : 0 }));
+
+    const topItem = topItems[0]?.item || 'N/A';
+    const importerTotal = Object.values(importerSums).reduce((sum, value) => sum + value, 0) || 1;
+    let hhi = 0;
+    Object.values(importerSums).forEach((value) => {
+        const share = value / importerTotal;
+        hhi += (share * 100) * (share * 100);
+    });
+    hhi = Math.round(hhi);
+
+    const marketTag = topItems[0]?.quantity_kg > 0 ? 'Top Product Active' : 'Monitoring';
+
+    return {
+        summary: [
+            { metric: 'Shipments', value: shipments },
+            { metric: 'Total Quantity KG', value: +totalQuantity.toFixed(2) },
+            { metric: 'Total Value USD', value: +totalValue.toFixed(2) },
+            { metric: 'Active Buyers', value: activeBuyers },
+            { metric: 'Origin Countries', value: origins },
+            { metric: 'HHI', value: hhi },
+            { metric: 'Top Product', value: topItem },
+            { metric: 'Signal Tag', value: marketTag },
+        ],
+        topItems,
+        topImporters,
+        topExporters,
+    };
+};
+
+const writeOverviewExcel = async (res, filename, payload) => {
+    const workbook = new ExcelJS.Workbook();
+
+    const summarySheet = workbook.addWorksheet('Overview');
+    summarySheet.columns = [
+        { header: 'Metric', key: 'metric', width: 24 },
+        { header: 'Value', key: 'value', width: 24 },
+    ];
+    payload.summary.forEach((row) => summarySheet.addRow(row));
+
+    const topItemsSheet = workbook.addWorksheet('Top Commodities');
+    topItemsSheet.columns = [
+        { header: 'Rank', key: 'rank', width: 10 },
+        { header: 'Item', key: 'item', width: 40 },
+        { header: 'Quantity KG', key: 'quantity_kg', width: 18 },
+        { header: 'Share %', key: 'share_pct', width: 12 },
+    ];
+    payload.topItems.forEach((row) => topItemsSheet.addRow(row));
+
+    const topImportersSheet = workbook.addWorksheet('Top Importers');
+    topImportersSheet.columns = [
+        { header: 'Rank', key: 'rank', width: 10 },
+        { header: 'Importer', key: 'importer', width: 40 },
+        { header: 'Quantity KG', key: 'quantity_kg', width: 18 },
+        { header: 'Share %', key: 'share_pct', width: 12 },
+    ];
+    payload.topImporters.forEach((row) => topImportersSheet.addRow(row));
+
+    const topExportersSheet = workbook.addWorksheet('Top Exporters');
+    topExportersSheet.columns = [
+        { header: 'Rank', key: 'rank', width: 10 },
+        { header: 'Exporter', key: 'exporter', width: 40 },
+        { header: 'Quantity KG', key: 'quantity_kg', width: 18 },
+        { header: 'Share %', key: 'share_pct', width: 12 },
+    ];
+    payload.topExporters.forEach((row) => topExportersSheet.addRow(row));
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await workbook.xlsx.write(res);
+    res.end();
+};
+
+const writeOverviewPdf = (res, filename, payload) => {
+    const doc = new PDFDocument({
+        size: 'A4',
+        layout: 'landscape',
+        margins: { top: 28, right: 26, bottom: 68, left: 26 },
+        bufferPages: true,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    doc.pipe(res);
+
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const colors = {
+        brand: '#9a4f13',
+        text: '#1f2f46',
+        muted: '#596579',
+        border: '#ccd5e2',
+        headBg: '#eef2f7',
+        altBg: '#f8fafc',
+    };
+
+    const drawHeader = () => {
+        const left = doc.page.margins.left;
+        const top = doc.page.margins.top;
+        const right = doc.page.width - doc.page.margins.right;
+        const generated = new Date().toLocaleString('en-GB', { hour12: false });
+
+        doc.font('Helvetica-Bold').fontSize(14).fillColor(colors.brand)
+            .text('TRADEINTEL', left, top, { width: pageWidth, align: 'left' });
+        doc.font('Helvetica-Bold').fontSize(12).fillColor(colors.text)
+            .text('Executive Overview', left, top + 22, { width: pageWidth, align: 'center' });
+        doc.font('Helvetica').fontSize(8.5).fillColor(colors.muted)
+            .text(`Generated: ${generated}`, left, top + 38, { width: pageWidth, align: 'center' });
+        doc.strokeColor(colors.border).lineWidth(1)
+            .moveTo(left, top + 56)
+            .lineTo(right, top + 56)
+            .stroke();
+        doc.y = top + 68;
+    };
+
+    const drawSummary = () => {
+        const labels = payload.summary;
+        const startY = doc.y;
+        const cellWidth = pageWidth / 4;
+        const cellHeight = 34;
+        labels.slice(0, 4).forEach((row, idx) => {
+            const x = doc.page.margins.left + (idx * cellWidth);
+            doc.rect(x, startY, cellWidth - 8, cellHeight).fill(colors.headBg).stroke(colors.border);
+            doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.text)
+                .text(row.metric, x + 6, startY + 5, { width: cellWidth - 20 });
+            doc.font('Helvetica').fontSize(10).fillColor(colors.brand)
+                .text(String(row.value), x + 6, startY + 18, { width: cellWidth - 20 });
+        });
+        doc.y = startY + cellHeight + 12;
+    };
+
+    const drawSimpleTable = (title, headers, rows, numericKeys = []) => {
+        doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.text).text(title, doc.page.margins.left, doc.y, { width: pageWidth });
+        const headerY = doc.y + 10;
+        const rowH = 20;
+        const colWidths = headers.map((h) => h.width);
+        let x = doc.page.margins.left;
+        doc.rect(x, headerY, pageWidth, rowH).fill(colors.headBg).stroke(colors.border);
+        headers.forEach((h, idx) => {
+            doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.text)
+                .text(h.label, x + 5, headerY + 6, { width: colWidths[idx] - 10, align: numericKeys.includes(h.key) ? 'right' : 'left' });
+            x += colWidths[idx];
+            doc.strokeColor(colors.border).moveTo(x, headerY).lineTo(x, headerY + rowH).stroke();
+        });
+
+        let y = headerY + rowH;
+        rows.slice(0, 8).forEach((row, rowIndex) => {
+            let rowX = doc.page.margins.left;
+            if (rowIndex % 2 === 0) doc.rect(rowX, y, pageWidth, rowH).fill(colors.altBg);
+            doc.rect(rowX, y, pageWidth, rowH).stroke(colors.border);
+            headers.forEach((h, idx) => {
+                const value = row[h.key];
+                doc.font('Helvetica').fontSize(8.5).fillColor(colors.text)
+                    .text(value === null || value === undefined ? '-' : String(value), rowX + 5, y + 6, { width: colWidths[idx] - 10, align: numericKeys.includes(h.key) ? 'right' : 'left' });
+                rowX += colWidths[idx];
+                doc.strokeColor(colors.border).moveTo(rowX, y).lineTo(rowX, y + rowH).stroke();
+            });
+            y += rowH;
+        });
+        doc.y = y + 12;
+    };
+
+    drawHeader();
+    drawSummary();
+    drawSimpleTable('Top Commodities', [
+        { label: 'Rank', key: 'rank', width: 40 },
+        { label: 'Item', key: 'item', width: 300 },
+        { label: 'Quantity KG', key: 'quantity_kg', width: 120 },
+        { label: 'Share %', key: 'share_pct', width: 90 },
+    ], payload.topItems, ['rank', 'quantity_kg', 'share_pct']);
+    drawSimpleTable('Top Importers', [
+        { label: 'Rank', key: 'rank', width: 40 },
+        { label: 'Importer', key: 'importer', width: 300 },
+        { label: 'Quantity KG', key: 'quantity_kg', width: 120 },
+        { label: 'Share %', key: 'share_pct', width: 90 },
+    ], payload.topImporters, ['rank', 'quantity_kg', 'share_pct']);
+
+    const buffered = doc.bufferedPageRange();
+    const lastPageIndex = buffered.start + buffered.count - 1;
+    doc.switchToPage(lastPageIndex);
+    doc.font('Helvetica').fontSize(7.2).fillColor(colors.muted)
+        .text('Executive overview export generated by TradeIntel', doc.page.margins.left, doc.page.height - doc.page.margins.bottom + 2, {
+            width: pageWidth,
+            align: 'center',
+            lineBreak: false,
+        });
+    doc.flushPages();
+    doc.end();
+};
+
 const writeExportExcel = async (res, filename, columns, rows) => {
     const workbook = new ExcelJS.Workbook();
     const ws = workbook.addWorksheet('Report');
@@ -540,6 +764,30 @@ const AiController = {
             res.end();
         } catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to export excel', error: error.message });
+        }
+    },
+
+    exportOverviewExcel: async (req, res) => {
+        try {
+            const rows = await fetchRows(req, res);
+            if (!rows) return;
+
+            const payload = buildOverviewPayload(rows);
+            await writeOverviewExcel(res, 'overview_report.xlsx', payload);
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to export overview report', error: error.message });
+        }
+    },
+
+    exportOverviewPDF: async (req, res) => {
+        try {
+            const rows = await fetchRows(req, res);
+            if (!rows) return;
+
+            const payload = buildOverviewPayload(rows);
+            writeOverviewPdf(res, 'overview_report.pdf', payload);
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to export overview report', error: error.message });
         }
     },
 

@@ -5,6 +5,31 @@ import "./ReportFilters.css";
 
 const ReportFilters = ({ filters, filterOptions, onFilterChange, onApplyFilters, onClearFilters, onExportReport, loading, isExporting = false, selectedReport }) => {
     const currentYear = new Date().getFullYear();
+    const pad = (value) => String(value).padStart(2, '0');
+    const toMonthValue = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    const getPresetRange = (preset) => {
+        const now = new Date();
+        const end = toMonthValue(now);
+        if (preset === 'last30') {
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - 30);
+            return { start: toMonthValue(startDate), end };
+        }
+        if (preset === 'quarter') {
+            const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+            return { start: `${now.getFullYear()}-${pad(quarterStartMonth + 1)}`, end };
+        }
+        if (preset === 'lastQuarter') {
+            const currentQuarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+            const previousQuarterEnd = new Date(now.getFullYear(), currentQuarterStartMonth, 0);
+            const previousQuarterStart = new Date(previousQuarterEnd.getFullYear(), previousQuarterEnd.getMonth() - 2, 1);
+            return { start: toMonthValue(previousQuarterStart), end: toMonthValue(previousQuarterEnd) };
+        }
+        if (preset === 'ytd') {
+            return { start: `${now.getFullYear()}-01`, end };
+        }
+        return { start: '', end: '' };
+    };
     const monthOptions = [
         { value: '01', label: 'Jan' },
         { value: '02', label: 'Feb' },
@@ -23,6 +48,7 @@ const ReportFilters = ({ filters, filterOptions, onFilterChange, onApplyFilters,
 
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [countryApiOptions, setCountryApiOptions] = useState([]);
+    const [showAdvanced, setShowAdvanced] = useState(true);
     const exportDisabled = !selectedReport || loading || isExporting;
     const isMarketIntel = selectedReport === "market-intel";
     const countryOptions = countryApiOptions.length
@@ -102,11 +128,68 @@ const ReportFilters = ({ filters, filterOptions, onFilterChange, onApplyFilters,
         );
     };
 
+    const applyPreset = (preset) => {
+        onFilterChange({ target: { name: 'periodPreset', value: preset } });
+        if (!preset || preset === 'custom') return;
+        const range = getPresetRange(preset);
+        if (range.start) onFilterChange({ target: { name: 'startDate', value: range.start } });
+        if (range.end) onFilterChange({ target: { name: 'endDate', value: range.end } });
+    };
+
     return (
         <div className="rf-wrap" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'flex-end' }}>
+            <div className="rf-field">
+                <label style={labelStyle}>Period Preset</label><br />
+                <select
+                    className="rf-input-select"
+                    name="periodPreset"
+                    value={filters.periodPreset || 'custom'}
+                    onChange={(e) => applyPreset(e.target.value)}
+                    style={{ ...inputStyle, minWidth: 150 }}
+                    disabled={loading}
+                >
+                    <option value="custom">Custom</option>
+                    <option value="last30">Last 30 Days</option>
+                    <option value="quarter">Current Quarter</option>
+                    <option value="lastQuarter">Previous Quarter</option>
+                    <option value="ytd">Year to Date</option>
+                </select>
+            </div>
             {/* Date Filters */}
             <MonthYearField label="Start Month" name="startDate" value={filters.startDate} />
             <MonthYearField label="End Month" name="endDate" value={filters.endDate} />
+            <div className="rf-field rf-compare-toggle">
+                <label style={labelStyle}>Comparison</label><br />
+                <button
+                    type="button"
+                    className={`rf-compare-btn ${filters.comparisonMode ? 'active' : ''}`}
+                    onClick={() => onFilterChange({ target: { name: 'comparisonMode', value: !filters.comparisonMode } })}
+                    disabled={loading}
+                >
+                    {filters.comparisonMode ? 'Comparison On' : 'Comparison Off'}
+                </button>
+            </div>
+            {filters.comparisonMode && (
+                <>
+                    <div className="rf-field">
+                        <label style={labelStyle}>Compare Preset</label><br />
+                        <select
+                            className="rf-input-select"
+                            name="comparisonPreset"
+                            value={filters.comparisonPreset || 'previousPeriod'}
+                            onChange={onFilterChange}
+                            style={{ ...inputStyle, minWidth: 160 }}
+                            disabled={loading}
+                        >
+                            <option value="previousPeriod">Previous Period</option>
+                            <option value="previousYear">Previous Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <MonthYearField label="Compare Start" name="compareStartDate" value={filters.compareStartDate} />
+                    <MonthYearField label="Compare End" name="compareEndDate" value={filters.compareEndDate} />
+                </>
+            )}
             {/* Country Filter */}
             <div className="rf-field">
                 <label style={labelStyle}>Country</label><br />
@@ -141,6 +224,14 @@ const ReportFilters = ({ filters, filterOptions, onFilterChange, onApplyFilters,
             </div>
             {/* Action Buttons */}
             <div className="rf-actions">
+                <button
+                    type="button"
+                    className="rf-btn rf-btn-muted"
+                    onClick={() => setShowAdvanced((value) => !value)}
+                    disabled={loading}
+                >
+                    {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                </button>
                 <button
                     className="rf-btn rf-btn-primary"
                     onClick={onApplyFilters}
@@ -203,6 +294,12 @@ const ReportFilters = ({ filters, filterOptions, onFilterChange, onApplyFilters,
                     )}
                 </div>
             </div>
+
+            {showAdvanced && (
+                <div className="rf-advanced-note">
+                    Use presets for fast range selection, then compare the current window against a previous or custom period.
+                </div>
+            )}
         </div>
     );
 };

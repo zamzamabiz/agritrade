@@ -11,6 +11,7 @@ const ReportSidebar = ({ sidebarOpen, setSidebarOpen, selectedReport, onSelectRe
     }, []);
 
     const ADVANCED_REPORTS = [
+        { id: 'overview', label: 'Executive Overview' },
         { id: 'market-intel', label: 'Market Intel' },
         { id: 'strategic', label: 'Strategic Hub' },
         { id: 'item-exporter', label: 'Item > Exporter' },

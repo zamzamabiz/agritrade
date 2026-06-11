@@ -683,22 +683,28 @@ const ReportController = {
       const from = req.query.startDate || "0001-01-01";
       const to = req.query.endDate || "9999-12-31";
 
-      const rows = await fetchGrouped(
-        req.sql,
-        {
-          companyId,
-          from,
-          to,
-          tradeType: req.query.trade_type
-            ? req.query.trade_type.toUpperCase()[0]
-            : null,
-          hs_code: req.query.hs_code ? Number(req.query.hs_code) : null,
-          item: req.query.item,
-          importer: req.query.importer,
-          exporter: req.query.exporter,
-        },
-        "origin_country_id",
-        "origin_country_id",
+      const { whereSql, values } = buildFilters({
+        companyId,
+        from,
+        to,
+        tradeType: req.query.trade_type,
+        hs_code: req.query.hs_code,
+        item: req.query.item,
+        importer: req.query.importer,
+        exporter: req.query.exporter,
+      });
+
+      const rows = await req.sql.unsafe(
+        `SELECT
+           COALESCE(NULLIF(TRIM(c.name), ''), 'UNKNOWN') AS country,
+           COUNT(*) AS transaction_count,
+           SUM(tf.quantity) AS total_quantity
+         FROM trade_fact tf
+         LEFT JOIN country_dim c ON c.id = tf.origin_country_id
+         WHERE ${whereSql} AND c.name IS NOT NULL
+         GROUP BY COALESCE(NULLIF(TRIM(c.name), ''), 'UNKNOWN')
+         ORDER BY country ASC`,
+        values,
       );
 
       const rowsWithSerial = rows.map((r, index) => ({
@@ -711,7 +717,7 @@ const ReportController = {
         `country_wise_${from}_to_${to}.xlsx`,
         [
           { header: "S.No", key: "sno", width: 6 },
-          { header: "Origin Country ID", key: "origin_country_id", width: 18 },
+          { header: "Country", key: "country", width: 24 },
           { header: "Transaction Count", key: "transaction_count", width: 18 },
           { header: "Total Quantity", key: "total_quantity", width: 16 },
         ],
@@ -939,22 +945,28 @@ const ReportController = {
       const from = req.query.startDate || "0001-01-01";
       const to = req.query.endDate || "9999-12-31";
 
-      const rows = await fetchGrouped(
-        req.sql,
-        {
-          companyId,
-          from,
-          to,
-          tradeType: req.query.trade_type
-            ? req.query.trade_type.toUpperCase()[0]
-            : null,
-          hs_code: req.query.hs_code ? Number(req.query.hs_code) : null,
-          item: req.query.item,
-          importer: req.query.importer,
-          exporter: req.query.exporter,
-        },
-        "origin_country_id",
-        "origin_country_id",
+      const { whereSql, values } = buildFilters({
+        companyId,
+        from,
+        to,
+        tradeType: req.query.trade_type,
+        hs_code: req.query.hs_code,
+        item: req.query.item,
+        importer: req.query.importer,
+        exporter: req.query.exporter,
+      });
+
+      const rows = await req.sql.unsafe(
+        `SELECT
+           COALESCE(NULLIF(TRIM(c.name), ''), 'UNKNOWN') AS country,
+           COUNT(*) AS transaction_count,
+           SUM(tf.quantity) AS total_quantity
+         FROM trade_fact tf
+         LEFT JOIN country_dim c ON c.id = tf.origin_country_id
+         WHERE ${whereSql} AND c.name IS NOT NULL
+         GROUP BY COALESCE(NULLIF(TRIM(c.name), ''), 'UNKNOWN')
+         ORDER BY country ASC`,
+        values,
       );
 
       const rowsWithSerial = rows.map((r, index) => ({
@@ -966,7 +978,7 @@ const ReportController = {
         res,
         `country_wise_${from}_to_${to}.pdf`,
         `Country-wise Report ${from} to ${to}`,
-        ["sno", "origin_country_id", "transaction_count", "total_quantity"],
+        ["sno", "country", "transaction_count", "total_quantity"],
         rowsWithSerial,
       );
     } catch (error) {

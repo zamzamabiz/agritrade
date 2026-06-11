@@ -146,6 +146,17 @@ class DataController {
       const sortDir = sortDirRaw === "desc" ? "DESC" : "ASC";
 
       const sortFieldMap = {
+        // direct table columns
+        trade_type: "tf.trade_type",
+        period_date: "tf.period_date",
+        origin_country: "c.name",
+        exporter_name: "tf.exporter_name",
+        importer_name: "tf.importer_name",
+        item_name: "tf.item_name",
+        item_description: "tf.item_description",
+        ntn: "tf.ntn",
+        port_of_shipment: "tf.port_of_shipment",
+        uom: "tf.uom",
         // text columns
         origin: "c.name",
         exporter: "tf.exporter_name",

@@ -867,11 +867,12 @@
 .td-table th {
   padding: 0.7rem 0.9rem;
   text-align: left;
-  white-space: nowrap;
   font-size: 0.98rem;
   letter-spacing: 1.5px;
   color: var(--theme-accent-muted, rgba(245, 158, 11, 0.7));
   font-weight: 600;
+  border-right: 1px solid rgba(245, 158, 11, 0.08);
+  vertical-align: top;
 }
 .td-table th.sortable {
   cursor: pointer;
@@ -886,7 +887,42 @@
 .td-th-inner {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.td-th-label {
+  min-width: 0;
+}
+.td-sort-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.td-sort-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(245, 158, 11, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(245, 158, 11, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.td-sort-btn:hover {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+.td-sort-btn.active {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
 }
 .td-sort-icon {
   opacity: 0.5;
@@ -907,6 +943,9 @@
 .td-table tbody tr:hover {
   background: rgba(245, 158, 11, 0.03);
 }
+.td-table tbody tr:hover td {
+  background: rgba(245, 158, 11, 0.03);
+}
 
 .td-table td {
   padding: 0.7rem 0.9rem;
@@ -915,6 +954,20 @@
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-right: 1px solid rgba(245, 158, 11, 0.08);
+  vertical-align: top;
+}
+.td-table th:last-child,
+.td-table td:last-child {
+  border-right: none;
+}
+.td-cell-wrap {
+  white-space: normal !important;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
 }
 .td-cell-hs {
   color: rgba(245, 158, 11, 0.7);

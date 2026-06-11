@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MdSearch, MdClear,
-  MdFilterList
+  MdFilterList,
+  MdArrowUpward,
+  MdArrowDownward,
 } from 'react-icons/md';
 import apiService from '../services/apiService';
 import ExportModal from '../components/ExportModal';
@@ -34,14 +36,39 @@ const TradeDataPage = () => {
     // 'agent_number',
     // 'terminal_sheds',
   ];
+  const COLUMN_LABELS = {
+    trade_type: 'TYPE',
+    period_date: 'DATE',
+    origin_country: 'COUNTRY',
+    exporter_name: 'EXPORTER',
+    item_name: 'ITEM',
+    item_description: 'DESCRIPTION',
+    ntn: 'NTN',
+    importer_name: 'IMPORTER',
+    value_usd: 'VALUE (USD)',
+    port_of_shipment: 'PORT',
+    quantity: 'QTY',
+    uom: 'UOM',
+  };
+  const SORTABLE_COLUMNS = new Set(COLUMN_ORDER);
+  const WRAP_COLUMNS = new Set([
+    'origin_country',
+    'exporter_name',
+    'item_name',
+    'item_description',
+    'importer_name',
+    'port_of_shipment',
+    'uom',
+    'ntn',
+  ]);
   const [tableColumns, setTableColumns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [total, setTotal] = useState(0);
-  const [sortBy] = useState('');
-  const [sortDir] = useState('desc');
+  const [sortBy, setSortBy] = useState('');
+  const [sortDir, setSortDir] = useState('desc');
   const [selectedChapter, setSelectedChapter] = useState(chapterParam);
   const [chapterSearch, setChapterSearch] = useState('');
   const [globalSearch, setGlobalSearch] = useState('');
@@ -147,6 +174,15 @@ const TradeDataPage = () => {
   const clearFilters = () => {
     const c = { origin_country_id:'', item:'', importer:'', exporter:'', startDate:'', endDate:'' };
     setFilters(c); setTempFilters(c); setGlobalSearch('');
+    setPage(1);
+  };
+
+  const getColumnLabel = (col) => COLUMN_LABELS[col] || col.replace(/_/g, ' ').toUpperCase();
+
+  const handleSort = (col, direction) => {
+    if (!SORTABLE_COLUMNS.has(col)) return;
+    setSortBy(col);
+    setSortDir(direction);
     setPage(1);
   };
 
@@ -536,24 +572,31 @@ const TradeDataPage = () => {
                     <thead>
                       <tr>
                         {tableColumns.map(col => (
-                          <th key={col}>{
-                            col === 'trade_type' ? 'TYPE'
-                            : col === 'period_date' ? 'DATE'
-                            : col === 'origin_country' ? 'COUNTRY'
-                            : col === 'exporter_name' ? 'EXPORTER'
-                            : col === 'item_name' ? 'ITEM'
-                            : col === 'item_description' ? 'DESCRIPTION'
-                            : col === 'ntn' ? 'NTN'
-                            : col === 'importer_name' ? 'IMPORTER'
-                            : col === 'value_usd' ? 'VALUE (USD)'
-                            : col === 'port_of_shipment' ? 'PORT'
-                            : col === 'quantity' ? 'QTY'
-                            : col === 'uom' ? 'UOM'
-                            // : col === 'agent_name' ? 'AGENT'
-                            // : col === 'agent_number' ? 'AGENT NO.'
-                            // : col === 'terminal_sheds' ? 'TERMINAL'
-                            : col.replace(/_/g, ' ').toUpperCase()
-                          }</th>
+                          <th key={col} className={SORTABLE_COLUMNS.has(col) ? 'sortable' : ''} scope="col">
+                            <div className="td-th-inner">
+                              <span className="td-th-label">{getColumnLabel(col)}</span>
+                              {SORTABLE_COLUMNS.has(col) && (
+                                <span className="td-sort-controls" aria-label={`Sort ${getColumnLabel(col)}`}>
+                                  <button
+                                    type="button"
+                                    className={`td-sort-btn ${sortBy === col && sortDir === 'asc' ? 'active' : ''}`}
+                                    onClick={() => handleSort(col, 'asc')}
+                                    aria-label={`Sort ${getColumnLabel(col)} ascending`}
+                                  >
+                                    <MdArrowUpward size={12} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`td-sort-btn ${sortBy === col && sortDir === 'desc' ? 'active' : ''}`}
+                                    onClick={() => handleSort(col, 'desc')}
+                                    aria-label={`Sort ${getColumnLabel(col)} descending`}
+                                  >
+                                    <MdArrowDownward size={12} />
+                                  </button>
+                                </span>
+                              )}
+                            </div>
+                          </th>
                         ))}
                       </tr>
                     </thead>
@@ -561,7 +604,7 @@ const TradeDataPage = () => {
                       {records.map((r, i) => (
                         <tr key={r.id || i} style={{ animationDelay: `${i * 20}ms` }}>
                           {tableColumns.map(col => (
-                            <td key={col}>
+                            <td key={col} className={WRAP_COLUMNS.has(col) ? 'td-cell-wrap' : ''}>
                               {(() => {
                                 if (col === 'trade_type') {
                                   return (
